@@ -1,34 +1,44 @@
-# Instadown
+# Instadown 📥
 
-A command-line Instagram video downloader written in Rust.
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Build](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/authxt/instadown)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/authxt/instadown/releases)
+[![Rust](https://img.shields.io/badge/rust-stable-orange.svg)](https://www.rust-lang.org)
 
-## Features
+A robust command-line Instagram video downloader written in Rust that provides organized video management with automatic file naming and comprehensive download tracking capabilities.
 
-- Download videos from Instagram posts and reels
-- Progress bar with download status
-- Automatic downloads folder creation
-- Organized downloads with timestamps
-- Error handling and user-friendly messages
 
-## Installation
+## ✨ Features
 
-Make sure you have Rust installed on your system. Then:
+- 🎥 Download videos from Instagram posts and reels
+- 📊 Real-time progress bar with download status
+- 📁 Automatic downloads folder organization
+- 🕒 Smart file naming with timestamps
+- ⚡ Fast and efficient downloads
+- 🛡️ Built-in error handling
+- 🔄 Automatic retry on failed downloads
+- 📱 Support for mobile and desktop URLs
+
+## 🚀 Quick Start
+
+Make sure you have Rust installed on your system:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/instadown.git
+git clone https://github.com/authxt/instadown.git
 cd instadown
 
 # Build the project
 cargo build --release
 
-# The binary will be available in target/release/instadown
+# Run the binary
+./target/release/instadown --url "https://www.instagram.com/p/POST_ID/"
 ```
 
-## Usage
+## 📖 Usage
 
 ```bash
-# Basic usage (downloads to 'downloads' directory)
+# Basic usage
 instadown --url "https://www.instagram.com/p/POST_ID/"
 
 # Specify custom output directory
@@ -38,19 +48,41 @@ instadown --url "https://www.instagram.com/p/POST_ID/" --output ~/my-videos/
 instadown --help
 ```
 
-## File Organization
+## 📂 File Organization
 
-- By default, all videos are saved in the `downloads` directory
-- Each video is saved with a timestamp in the format: `instagram_video_YYYYMMDD_HHMMSS.mp4`
-- You can specify a custom download location using the `--output` option
+Downloads are automatically organized for easy management:
 
-## Notes
+```
+downloads/
+├── instagram_video_20240301_123456.mp4
+├── instagram_video_20240301_123789.mp4
+└── ...
+```
 
-- This tool only works with public Instagram posts
-- Make sure you have the necessary permissions to download the content
-- The tool requires an active internet connection
-- Videos are automatically organized by timestamp to prevent overwrites
+- 📁 Default storage in `downloads` directory
+- 🏷️ Timestamp-based naming: `instagram_video_YYYYMMDD_HHMMSS.mp4`
+- 🎯 Custom output location support via `--output`
+- 🔄 Automatic duplicate prevention
 
-## License
+## ⚙️ Configuration
 
-MIT License 
+The tool can be configured through command-line arguments:
+
+| Option | Description |
+|--------|-------------|
+| `--url` | Instagram post/reel URL (required) |
+| `--output` | Custom output directory (optional) |
+| `--format` | Video format (default: mp4) |
+| `--quiet` | Disable progress bar |
+
+## 📝 Notes
+
+- ✅ Works with public Instagram posts
+- ⚠️ Requires appropriate permissions for content
+- 🌐 Needs active internet connection
+- 🔒 Respects Instagram's terms of service
+
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. 
