@@ -1,5 +1,5 @@
 use ratatui::{
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::{Constraint, Direction, Layout, Rect, Alignment},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, Paragraph, Tabs},
@@ -9,17 +9,27 @@ use ratatui::{
 use super::app::{App, DownloadStatus, InputMode, FocusedArea};
 
 pub fn render(frame: &mut Frame, app: &App) {
-    // Create the layout
+    // Create the main layout
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(3),  // Tabs
+            Constraint::Length(3),  // Tabs and Exit button
             Constraint::Length(3),  // Input
             Constraint::Min(0),     // Content
         ])
         .split(frame.size());
 
-    render_tabs(frame, app, chunks[0]);
+    // Create a horizontal layout for tabs and exit button
+    let top_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Min(20),    // Tabs
+            Constraint::Length(9),  // Exit button (width of "[Exit]" + borders)
+        ])
+        .split(chunks[0]);
+
+    render_tabs(frame, app, top_chunks[0]);
+    render_exit_button(frame, app, top_chunks[1]);
     render_input(frame, app, chunks[1]);
 
     match app.selected_tab {
@@ -27,6 +37,34 @@ pub fn render(frame: &mut Frame, app: &App) {
         1 => render_history_tab(frame, app, chunks[2]),
         _ => unreachable!(),
     }
+}
+
+fn render_exit_button(frame: &mut Frame, app: &App, area: Rect) {
+    let exit_text = "[Exit]";
+    let is_focused = matches!(app.focused_area, FocusedArea::ExitButton);
+    
+    let exit_button = Paragraph::new(exit_text)
+        .alignment(Alignment::Center)
+        .style(
+            if is_focused {
+                Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)
+            } else {
+                Style::default().fg(Color::Gray)
+            }
+        )
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(
+                    if is_focused {
+                        Style::default().fg(Color::Red)
+                    } else {
+                        Style::default()
+                    }
+                )
+        );
+
+    frame.render_widget(exit_button, area);
 }
 
 fn render_tabs(frame: &mut Frame, app: &App, area: Rect) {

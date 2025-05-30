@@ -20,6 +20,7 @@ pub enum FocusedArea {
     Tabs,
     Input,
     History,
+    ExitButton,
     None,
 }
 
@@ -144,10 +145,17 @@ impl App {
                     }
                 }
             }
+            FocusedArea::ExitButton => {
+                self.focused_area = FocusedArea::ExitButton;
+            }
             FocusedArea::None => {
                 self.focused_area = FocusedArea::None;
                 self.selected_history_item = None;
             }
         }
+    }
+
+    pub fn is_exit_requested(&self) -> bool {
+        matches!(self.focused_area, FocusedArea::ExitButton)
     }
 } 

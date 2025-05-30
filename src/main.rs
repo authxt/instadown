@@ -101,8 +101,13 @@ fn main() -> Result<()> {
             Event::Mouse(mouse) => {
                 if mouse.kind == MouseEventKind::Down(MouseButton::Left) {
                     let (x, y) = (mouse.column, mouse.row);
+                    // Check if exit button was clicked (top-right corner)
+                    if y < 3 && x >= frame.size().width.saturating_sub(9) {
+                        app.handle_mouse_click(x, y, FocusedArea::ExitButton);
+                        break;
+                    }
                     // Determine which area was clicked based on y position
-                    if y < 3 {
+                    else if y < 3 {
                         app.handle_mouse_click(x, y, FocusedArea::Tabs);
                     } else if y < 6 {
                         app.handle_mouse_click(x, y, FocusedArea::Input);
