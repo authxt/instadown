@@ -154,8 +154,4 @@ impl App {
             }
         }
     }
-
-    pub fn is_exit_requested(&self) -> bool {
-        matches!(self.focused_area, FocusedArea::ExitButton)
-    }
 } 

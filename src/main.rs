@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind, MouseEventKind, MouseButton},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen, size},
 };
 use ratatui::prelude::*;
 use std::io;
@@ -101,18 +101,21 @@ fn main() -> Result<()> {
             Event::Mouse(mouse) => {
                 if mouse.kind == MouseEventKind::Down(MouseButton::Left) {
                     let (x, y) = (mouse.column, mouse.row);
-                    // Check if exit button was clicked (top-right corner)
-                    if y < 3 && x >= frame.size().width.saturating_sub(9) {
-                        app.handle_mouse_click(x, y, FocusedArea::ExitButton);
-                        break;
-                    }
-                    // Determine which area was clicked based on y position
-                    else if y < 3 {
-                        app.handle_mouse_click(x, y, FocusedArea::Tabs);
-                    } else if y < 6 {
-                        app.handle_mouse_click(x, y, FocusedArea::Input);
-                    } else {
-                        app.handle_mouse_click(x, y, FocusedArea::History);
+                    // Get terminal size
+                    if let Ok((width, _)) = size() {
+                        // Check if exit button was clicked (top-right corner)
+                        if y < 3 && x >= width.saturating_sub(9) {
+                            app.handle_mouse_click(x, y, FocusedArea::ExitButton);
+                            break;
+                        }
+                        // Determine which area was clicked based on y position
+                        else if y < 3 {
+                            app.handle_mouse_click(x, y, FocusedArea::Tabs);
+                        } else if y < 6 {
+                            app.handle_mouse_click(x, y, FocusedArea::Input);
+                        } else {
+                            app.handle_mouse_click(x, y, FocusedArea::History);
+                        }
                     }
                 }
             }
