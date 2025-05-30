@@ -71,9 +71,14 @@ fn main() -> Result<()> {
                             KeyCode::Enter => {
                                 if !app.input.is_empty() {
                                     app.download_status = DownloadStatus::InProgress;
-                                    match downloader.download(&app.input) {
+                                    let url = app.input.clone();
+                                    match downloader.download(&url, |status| {
+                                        app.download_status = status;
+                                        // Force a redraw to update the progress
+                                        terminal.draw(|frame| render(frame, &app)).unwrap();
+                                    }) {
                                         Ok(filename) => {
-                                            app.add_download(app.input.clone(), filename);
+                                            app.add_download(url, filename);
                                             app.input.clear();
                                             app.exit_edit_mode();
                                             app.download_status = DownloadStatus::Complete;

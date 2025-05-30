@@ -2,7 +2,7 @@ use ratatui::{
     layout::{Constraint, Direction, Layout, Rect, Alignment},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, Paragraph, Tabs},
+    widgets::{Block, Borders, List, ListItem, Paragraph, Tabs, Wrap},
     Frame,
 };
 
@@ -121,21 +121,40 @@ fn render_download_tab(frame: &mut Frame, app: &App, area: Rect) {
         .borders(Borders::ALL)
         .title("Download Status");
 
-    let status_text = match &app.download_status {
-        DownloadStatus::None => "Press 'i' to enter URL, 'Enter' to download, or click to interact".to_string(),
-        DownloadStatus::InProgress => "Starting download...".to_string(),
-        DownloadStatus::Complete => "Download complete!".to_string(),
-        DownloadStatus::Error(err) => format!("Error: {}", err),
+    let (status_text, style) = match &app.download_status {
+        DownloadStatus::None => (
+            "Press 'i' to enter URL, 'Enter' to download, or click to interact".to_string(),
+            Style::default().fg(Color::White)
+        ),
+        DownloadStatus::InProgress => (
+            "Starting download...".to_string(),
+            Style::default().fg(Color::Yellow)
+        ),
+        DownloadStatus::Downloading { progress, speed, eta, size } => (
+            format!(
+                "Downloading... {:.1}%\nSpeed: {}\nETA: {}\nSize: {}",
+                progress * 100.0,
+                speed,
+                eta,
+                size
+            ),
+            Style::default().fg(Color::Yellow)
+        ),
+        DownloadStatus::Complete => (
+            "Download complete!".to_string(),
+            Style::default().fg(Color::Green)
+        ),
+        DownloadStatus::Error(err) => (
+            format!("Error: {}", err),
+            Style::default().fg(Color::Red)
+        ),
     };
 
     let status = Paragraph::new(status_text)
-        .style(Style::default().fg(match app.download_status {
-            DownloadStatus::None => Color::White,
-            DownloadStatus::InProgress => Color::Yellow,
-            DownloadStatus::Complete => Color::Green,
-            DownloadStatus::Error(_) => Color::Red,
-        }))
-        .block(download_block);
+        .style(style)
+        .block(download_block)
+        .alignment(Alignment::Left)
+        .wrap(Wrap { trim: true });
 
     frame.render_widget(status, area);
 }

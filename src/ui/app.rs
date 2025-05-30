@@ -11,6 +11,12 @@ pub enum InputMode {
 pub enum DownloadStatus {
     None,
     InProgress,
+    Downloading {
+        progress: f32,
+        speed: String,
+        eta: String,
+        size: String,
+    },
     Complete,
     Error(String),
 }
