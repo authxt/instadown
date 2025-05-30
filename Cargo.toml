@@ -7,10 +7,11 @@ description = "An Instagram video downloader application"
 
 [dependencies]
 anyhow = "1.0"
-clap = { version = "4.3", features = ["derive"] }
-ratatui = "0.26.0"
-crossterm = "0.27.0"
-chrono = { version = "0.4", features = ["serde"] }
+clap = { version = "4.4", features = ["derive"] }
+ratatui = "0.26"
+crossterm = "0.27"
+chrono = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-directories = "5.0" 
+directories = "5.0"
+termsize = "0.1" 
