@@ -114,7 +114,8 @@ impl Downloader {
         if success && status.success() {
             Ok(output_template)
         } else {
-            Err(anyhow::anyhow!(error_message.trim()))
+            let error_message = error_message.trim().to_string();
+            Err(anyhow::anyhow!("{}", error_message))
         }
     }
 } 
