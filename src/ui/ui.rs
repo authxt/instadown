@@ -1,12 +1,20 @@
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect, Alignment},
     style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, Paragraph, Tabs, Wrap},
+    text::{Line, Span, Text},
+    widgets::{Block, Borders, BorderType, List, ListItem, Paragraph, Tabs, Wrap},
     Frame,
 };
 
 use super::app::{App, DownloadStatus, InputMode, FocusedArea};
+
+const THEME_PRIMARY: Color = Color::Rgb(147, 112, 219);    // Light Purple
+const THEME_SECONDARY: Color = Color::Rgb(106, 90, 205);   // Slate Blue
+const THEME_ACCENT: Color = Color::Rgb(255, 105, 180);     // Hot Pink
+const THEME_SUCCESS: Color = Color::Rgb(50, 205, 50);      // Lime Green
+const THEME_ERROR: Color = Color::Rgb(255, 69, 0);         // Red Orange
+const THEME_WARNING: Color = Color::Rgb(255, 215, 0);      // Gold
+const THEME_TEXT: Color = Color::Rgb(248, 248, 255);       // Ghost White
 
 pub fn render(frame: &mut Frame, app: &App) {
     // Create the main layout
@@ -24,7 +32,7 @@ pub fn render(frame: &mut Frame, app: &App) {
         .direction(Direction::Horizontal)
         .constraints([
             Constraint::Min(20),    // Tabs
-            Constraint::Length(9),  // Exit button (width of "[Exit]" + borders)
+            Constraint::Length(9),  // Exit button
         ])
         .split(chunks[0]);
 
@@ -40,14 +48,14 @@ pub fn render(frame: &mut Frame, app: &App) {
 }
 
 fn render_exit_button(frame: &mut Frame, app: &App, area: Rect) {
-    let exit_text = "[Exit]";
+    let exit_text = "❌ Exit";
     let is_focused = matches!(app.focused_area, FocusedArea::ExitButton);
     
     let exit_button = Paragraph::new(exit_text)
         .alignment(Alignment::Center)
         .style(
             if is_focused {
-                Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)
+                Style::default().fg(THEME_ERROR).add_modifier(Modifier::BOLD)
             } else {
                 Style::default().fg(Color::Gray)
             }
@@ -55,11 +63,12 @@ fn render_exit_button(frame: &mut Frame, app: &App, area: Rect) {
         .block(
             Block::default()
                 .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
                 .border_style(
                     if is_focused {
-                        Style::default().fg(Color::Red)
+                        Style::default().fg(THEME_ERROR)
                     } else {
-                        Style::default()
+                        Style::default().fg(Color::DarkGray)
                     }
                 )
         );
@@ -68,24 +77,38 @@ fn render_exit_button(frame: &mut Frame, app: &App, area: Rect) {
 }
 
 fn render_tabs(frame: &mut Frame, app: &App, area: Rect) {
-    let titles: Vec<Line> = vec!["Download", "History"]
+    let titles: Vec<Line> = vec!["📥 Download", "📋 History"]
         .iter()
-        .map(|t| Line::from(Span::styled(*t, Style::default().fg(Color::White))))
+        .map(|t| {
+            Line::from(vec![
+                Span::styled(
+                    *t,
+                    Style::default()
+                        .fg(THEME_TEXT)
+                        .add_modifier(Modifier::BOLD)
+                )
+            ])
+        })
         .collect();
 
     let tabs = Tabs::new(titles)
         .block(Block::default()
             .borders(Borders::ALL)
-            .title("Tabs")
-            .border_style(if matches!(app.focused_area, FocusedArea::Tabs) {
-                Style::default().fg(Color::Yellow)
-            } else {
-                Style::default()
-            }))
+            .border_type(BorderType::Rounded)
+            .border_style(
+                if matches!(app.focused_area, FocusedArea::Tabs) {
+                    Style::default().fg(THEME_PRIMARY)
+                } else {
+                    Style::default().fg(THEME_SECONDARY)
+                }
+            )
+            .title(" Tabs "))
         .select(app.selected_tab)
-        .highlight_style(Style::default()
-            .add_modifier(Modifier::BOLD)
-            .bg(Color::DarkGray));
+        .highlight_style(
+            Style::default()
+                .fg(THEME_ACCENT)
+                .add_modifier(Modifier::BOLD)
+        );
 
     frame.render_widget(tabs, area);
 }
@@ -93,18 +116,26 @@ fn render_tabs(frame: &mut Frame, app: &App, area: Rect) {
 fn render_input(frame: &mut Frame, app: &App, area: Rect) {
     let is_focused = matches!(app.focused_area, FocusedArea::Input);
     let input = Paragraph::new(app.input.as_str())
-        .style(match app.input_mode {
-            InputMode::Normal => Style::default(),
-            InputMode::Editing => Style::default().fg(Color::Yellow),
-        })
-        .block(Block::default()
-            .borders(Borders::ALL)
-            .title("Instagram URL")
-            .border_style(if is_focused {
-                Style::default().fg(Color::Yellow)
+        .style(
+            if matches!(app.input_mode, InputMode::Editing) {
+                Style::default().fg(THEME_ACCENT)
             } else {
-                Style::default()
-            }));
+                Style::default().fg(THEME_TEXT)
+            }
+        )
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .title(" 🔗 Instagram URL ")
+                .border_style(
+                    if is_focused {
+                        Style::default().fg(THEME_PRIMARY)
+                    } else {
+                        Style::default().fg(THEME_SECONDARY)
+                    }
+                )
+        );
 
     frame.render_widget(input, area);
 
@@ -117,42 +148,44 @@ fn render_input(frame: &mut Frame, app: &App, area: Rect) {
 }
 
 fn render_download_tab(frame: &mut Frame, app: &App, area: Rect) {
-    let download_block = Block::default()
-        .borders(Borders::ALL)
-        .title("Download Status");
-
     let (status_text, style) = match &app.download_status {
         DownloadStatus::None => (
-            "Press 'i' to enter URL, 'Enter' to download, or click to interact".to_string(),
-            Style::default().fg(Color::White)
+            "✨ Press 'i' to enter URL, 'Enter' to download, or click to interact".to_string(),
+            Style::default().fg(THEME_TEXT)
         ),
         DownloadStatus::InProgress => (
-            "Starting download...".to_string(),
-            Style::default().fg(Color::Yellow)
+            "🚀 Starting download...".to_string(),
+            Style::default().fg(THEME_WARNING)
         ),
         DownloadStatus::Downloading { progress, speed, eta, size } => (
             format!(
-                "Downloading... {:.1}%\nSpeed: {}\nETA: {}\nSize: {}",
+                "⬇️ Downloading... {:.1}%\n📊 Speed: {}\n⏱️ ETA: {}\n📦 Size: {}",
                 progress * 100.0,
                 speed,
                 eta,
                 size
             ),
-            Style::default().fg(Color::Yellow)
+            Style::default().fg(THEME_PRIMARY)
         ),
         DownloadStatus::Complete => (
-            "Download complete!".to_string(),
-            Style::default().fg(Color::Green)
+            "✅ Download complete!".to_string(),
+            Style::default().fg(THEME_SUCCESS)
         ),
         DownloadStatus::Error(err) => (
-            format!("Error: {}", err),
-            Style::default().fg(Color::Red)
+            format!("❌ Error: {}", err),
+            Style::default().fg(THEME_ERROR)
         ),
     };
 
-    let status = Paragraph::new(status_text)
+    let status = Paragraph::new(Text::from(status_text))
         .style(style)
-        .block(download_block)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .title(" Download Status ")
+                .border_style(Style::default().fg(THEME_SECONDARY))
+        )
         .alignment(Alignment::Left)
         .wrap(Wrap { trim: true });
 
@@ -166,34 +199,41 @@ fn render_history_tab(frame: &mut Frame, app: &App, area: Rect) {
         .enumerate()
         .map(|(i, download)| {
             let style = if Some(i) == app.selected_history_item {
-                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
-            } else {
                 Style::default()
+                    .fg(THEME_ACCENT)
+                    .add_modifier(Modifier::BOLD)
+            } else {
+                Style::default().fg(THEME_TEXT)
             };
 
             ListItem::new(Line::from(vec![
                 Span::styled(
-                    download.timestamp.format("%Y-%m-%d %H:%M:%S").to_string(),
-                    style.fg(Color::Gray),
+                    format!("📅 {} ", download.timestamp.format("%Y-%m-%d %H:%M:%S")),
+                    style.fg(THEME_WARNING)
                 ),
                 Span::raw(" "),
                 Span::styled(
-                    &download.filename,
-                    style,
+                    format!("📹 {}", download.filename),
+                    style
                 ),
             ]))
         })
         .collect();
 
     let history = List::new(items)
-        .block(Block::default()
-            .borders(Borders::ALL)
-            .title("Download History")
-            .border_style(if matches!(app.focused_area, FocusedArea::History) {
-                Style::default().fg(Color::Yellow)
-            } else {
-                Style::default()
-            }));
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .title(" 📜 Download History ")
+                .border_style(
+                    if matches!(app.focused_area, FocusedArea::History) {
+                        Style::default().fg(THEME_PRIMARY)
+                    } else {
+                        Style::default().fg(THEME_SECONDARY)
+                    }
+                )
+        );
 
     frame.render_widget(history, area);
 } 
