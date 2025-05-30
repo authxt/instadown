@@ -1,0 +1,1 @@
+/home/authxt/instadown/target/debug/instadown: /home/authxt/instadown/src/downloader/mod.rs /home/authxt/instadown/src/main.rs /home/authxt/instadown/src/ui/app.rs /home/authxt/instadown/src/ui/mod.rs /home/authxt/instadown/src/ui/ui.rs
