@@ -1,34 +1,25 @@
-mod ui;
-mod downloader;
-
-use anyhow::Result;
-use clap::Parser;
-use std::path::PathBuf;
+use std::{io, path::PathBuf};
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind, MouseEventKind, MouseButton},
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen, size},
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use ratatui::prelude::*;
-use std::io;
+use ratatui::{
+    backend::CrosstermBackend,
+    Terminal,
+};
 
-use crate::ui::app::{App, InputMode, DownloadStatus, FocusedArea};
-use crate::ui::ui::render;
-use crate::downloader::Downloader;
+use crate::{
+    ui::{render, app::App},
+    core::Config,
+    downloader::InstagramDownloader,
+};
 
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-struct Args {
-    /// Instagram post URL
-    #[arg(short, long)]
-    url: String,
+mod core;
+mod downloader;
+mod ui;
 
-    /// Output directory (optional)
-    #[arg(short, long, default_value = "downloads")]
-    output: PathBuf,
-}
-
-fn main() -> Result<()> {
+fn main() -> io::Result<()> {
     // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -37,96 +28,12 @@ fn main() -> Result<()> {
     let mut terminal = Terminal::new(backend)?;
 
     // Create app state
-    let mut app = App::new();
-    let downloader = match Downloader::new(app.base_path.clone()) {
-        Ok(d) => d,
-        Err(e) => {
-            // Clean up terminal before showing error
-            disable_raw_mode()?;
-            execute!(
-                terminal.backend_mut(),
-                LeaveAlternateScreen,
-                DisableMouseCapture
-            )?;
-            terminal.show_cursor()?;
-            return Err(e);
-        }
-    };
+    let config = Config::new(PathBuf::from("downloads"));
+    let downloader = InstagramDownloader::new(config).expect("Failed to create downloader");
+    let app = App::new(downloader);
 
-    // Main loop
-    loop {
-        terminal.draw(|frame| render(frame, &app))?;
-
-        match event::read()? {
-            Event::Key(key) => {
-                if key.kind == KeyEventKind::Press {
-                    match app.input_mode {
-                        InputMode::Normal => match key.code {
-                            KeyCode::Char('q') => break,
-                            KeyCode::Char('i') => app.enter_edit_mode(),
-                            KeyCode::Tab => app.toggle_tab(),
-                            _ => {}
-                        },
-                        InputMode::Editing => match key.code {
-                            KeyCode::Enter => {
-                                if !app.input.is_empty() {
-                                    app.download_status = DownloadStatus::InProgress;
-                                    let url = app.input.clone();
-                                    match downloader.download(&url, |status| {
-                                        app.download_status = status;
-                                        // Force a redraw to update the progress
-                                        terminal.draw(|frame| render(frame, &app)).unwrap();
-                                    }) {
-                                        Ok(filename) => {
-                                            app.add_download(url, filename);
-                                            app.input.clear();
-                                            app.exit_edit_mode();
-                                            app.download_status = DownloadStatus::Complete;
-                                        }
-                                        Err(e) => {
-                                            app.download_status = DownloadStatus::Error(e.to_string());
-                                        }
-                                    }
-                                }
-                            }
-                            KeyCode::Esc => {
-                                app.exit_edit_mode();
-                            }
-                            KeyCode::Char(c) => {
-                                app.input.push(c);
-                            }
-                            KeyCode::Backspace => {
-                                app.input.pop();
-                            }
-                            _ => {}
-                        }
-                    }
-                }
-            }
-            Event::Mouse(mouse) => {
-                if mouse.kind == MouseEventKind::Down(MouseButton::Left) {
-                    let (x, y) = (mouse.column, mouse.row);
-                    // Get terminal size
-                    if let Ok((width, _)) = size() {
-                        // Check if exit button was clicked (top-right corner)
-                        if y < 3 && x >= width.saturating_sub(9) {
-                            app.handle_mouse_click(x, y, FocusedArea::ExitButton);
-                            break;
-                        }
-                        // Determine which area was clicked based on y position
-                        else if y < 3 {
-                            app.handle_mouse_click(x, y, FocusedArea::Tabs);
-                        } else if y < 6 {
-                            app.handle_mouse_click(x, y, FocusedArea::Input);
-                        } else {
-                            app.handle_mouse_click(x, y, FocusedArea::History);
-                        }
-                    }
-                }
-            }
-            _ => {}
-        }
-    }
+    // Start the main loop
+    let res = run_app(&mut terminal, app);
 
     // Restore terminal
     disable_raw_mode()?;
@@ -137,5 +44,58 @@ fn main() -> Result<()> {
     )?;
     terminal.show_cursor()?;
 
+    if let Err(err) = res {
+        println!("{:?}", err);
+    }
+
     Ok(())
+}
+
+fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
+    loop {
+        terminal.draw(|f| render(f, &app))?;
+
+        if let Event::Key(key) = event::read()? {
+            match key.code {
+                KeyCode::Char('q') | KeyCode::Char('Q') => {
+                    if app.focused_area == ui::app::FocusedArea::ExitButton {
+                        return Ok(());
+                    }
+                },
+                KeyCode::Enter => {
+                    if app.focused_area == ui::app::FocusedArea::ExitButton {
+                        return Ok(());
+                    }
+                    app.submit_url();
+                },
+                KeyCode::Char('i') => app.enter_edit_mode(),
+                KeyCode::Esc => app.exit_edit_mode(),
+                KeyCode::Tab => app.toggle_tab(),
+                KeyCode::Char(c) => {
+                    if app.input_mode == ui::app::InputMode::Editing {
+                        app.input.push(c);
+                    }
+                },
+                KeyCode::Backspace => {
+                    if app.input_mode == ui::app::InputMode::Editing {
+                        app.input.pop();
+                    }
+                },
+                _ => {}
+            }
+        } else if let Event::Mouse(mouse_event) = event::read()? {
+            use crossterm::event::{MouseButton, MouseEventKind};
+            
+            if let MouseEventKind::Down(MouseButton::Left) = mouse_event.kind {
+                // Get the terminal size
+                let size = terminal.size()?;
+                
+                // Check if click is in the exit button area (top right)
+                if mouse_event.row == 1 && mouse_event.column >= size.width - 9 {
+                    app.handle_mouse_click(mouse_event.column, mouse_event.row, ui::app::FocusedArea::ExitButton);
+                    return Ok(());
+                }
+            }
+        }
+    }
 } 
