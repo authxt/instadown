@@ -1,88 +1,123 @@
 # Instadown 📥
 
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Build](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/authxt/instadown)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/authxt/instadown/releases)
-[![Rust](https://img.shields.io/badge/rust-stable-orange.svg)](https://www.rust-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Rust](https://img.shields.io/badge/Rust-1.75+-orange.svg)](https://www.rust-lang.org)
+[![yt-dlp](https://img.shields.io/badge/yt--dlp-latest-red.svg)](https://github.com/yt-dlp/yt-dlp)
+[![Ratatui](https://img.shields.io/badge/TUI-Ratatui-purple.svg)](https://github.com/ratatui-org/ratatui)
+[![Crossterm](https://img.shields.io/badge/Terminal-Crossterm-blue.svg)](https://github.com/crossterm-rs/crossterm)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com)
 
-A robust command-line Instagram video downloader written in Rust that provides organized video management with automatic file naming and comprehensive download tracking capabilities.
+A beautiful Terminal User Interface (TUI) application for downloading Instagram videos, built with Rust.
 
 
-## ✨ Features
+## Features ✨
 
-- 🎥 Download videos from Instagram posts and reels
-- 📊 Real-time progress bar with download status
-- 📁 Automatic downloads folder organization
-- 🕒 Smart file naming with timestamps
-- ⚡ Fast and efficient downloads
-- 🛡️ Built-in error handling
-- 🔄 Automatic retry on failed downloads
-- 📱 Support for mobile and desktop URLs
+- 🎨 Beautiful TUI with tabs and interactive elements
+- 📥 Download Instagram videos with progress tracking
+- 📋 Download history with timestamps
+- 🖱️ Mouse support for easy navigation
+- ⌨️ Keyboard shortcuts for power users
+- 🎯 Real-time download progress with speed, ETA, and file size
+- 💾 Automatic download organization
 
-## 🚀 Quick Start
+## Requirements 📋
 
-Make sure you have Rust installed on your system:
+- Rust (latest stable)
+- yt-dlp (for video downloading)
+- A terminal that supports TUI applications
+
+### Installing yt-dlp
+
+#### On Nix:
+```bash
+nix-env -iA nixpkgs.yt-dlp
+```
+
+#### On other systems:
+- **Linux**: `sudo apt install yt-dlp` or `sudo pacman -S yt-dlp`
+- **macOS**: `brew install yt-dlp`
+- **Windows**: `choco install yt-dlp`
+
+Or follow the [official yt-dlp installation guide](https://github.com/yt-dlp/yt-dlp#installation).
+
+## Installation 🚀
+
+1. Clone the repository:
+```bash
+git clone https://github.com/authxt/instadown.git
+cd instadown
+```
+
+2. Build and run with Cargo:
+```bash
+cargo build --release
+cargo run --release
+```
+
+## Usage 💡
+
+1. Launch the application:
+```bash
+cargo run --release
+```
+
+2. Navigate the interface:
+   - Press `i` to enter URL input mode
+   - Paste an Instagram video URL
+   - Press `Enter` to start downloading
+   - Use `Tab` to switch between Download and History tabs
+   - Click the Exit button or press `q` to quit
+
+### Keyboard Shortcuts ⌨️
+
+- `i` - Enter URL input mode
+- `Esc` - Exit input mode
+- `Tab` - Switch tabs
+- `Enter` - Submit URL/Confirm action
+- `q` or `Q` - Quit application
+
+### Mouse Controls 🖱️
+
+- Click tabs to switch between views
+- Click the input field to enter text
+- Click the exit button to quit
+
+## Download Location 📂
+
+Downloaded videos are saved in the `downloads` directory with the following format:
+```
+downloads/
+  └── title_uploaddate_id.ext
+```
+
+## Development 🛠️
+
+This project uses:
+- [ratatui](https://github.com/ratatui-org/ratatui) for the terminal interface
+- [crossterm](https://github.com/crossterm-rs/crossterm) for terminal manipulation
+- [yt-dlp](https://github.com/yt-dlp/yt-dlp) for video downloading
+
+### Building from Source
 
 ```bash
 # Clone the repository
 git clone https://github.com/authxt/instadown.git
 cd instadown
 
-# Build the project
-cargo build --release
+# Development build
+cargo build
 
-# Run the binary
-./target/release/instadown --url "https://www.instagram.com/p/POST_ID/"
+# Run tests
+cargo test
+
+# Run with debug output
+RUST_LOG=debug cargo run
 ```
 
-## 📖 Usage
+## License 📄
 
-```bash
-# Basic usage
-instadown --url "https://www.instagram.com/p/POST_ID/"
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-# Specify custom output directory
-instadown --url "https://www.instagram.com/p/POST_ID/" --output ~/my-videos/
-
-# Show help
-instadown --help
-```
-
-## 📂 File Organization
-
-Downloads are automatically organized for easy management:
-
-```
-downloads/
-├── instagram_video_20240301_123456.mp4
-├── instagram_video_20240301_123789.mp4
-└── ...
-```
-
-- 📁 Default storage in `downloads` directory
-- 🏷️ Timestamp-based naming: `instagram_video_YYYYMMDD_HHMMSS.mp4`
-- 🎯 Custom output location support via `--output`
-- 🔄 Automatic duplicate prevention
-
-## ⚙️ Configuration
-
-The tool can be configured through command-line arguments:
-
-| Option | Description |
-|--------|-------------|
-| `--url` | Instagram post/reel URL (required) |
-| `--output` | Custom output directory (optional) |
-| `--format` | Video format (default: mp4) |
-| `--quiet` | Disable progress bar |
-
-## 📝 Notes
-
-- ✅ Works with public Instagram posts
-- ⚠️ Requires appropriate permissions for content
-- 🌐 Needs active internet connection
-- 🔒 Respects Instagram's terms of service
-
-
-## 🤝 Contributing
+## Contributing 🤝
 
 Contributions are welcome! Please feel free to submit a Pull Request. 
