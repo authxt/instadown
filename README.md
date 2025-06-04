@@ -44,7 +44,7 @@ Or follow the [official yt-dlp installation guide](https://github.com/yt-dlp/yt-
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/authxt/instadown.git
+git clone https://github.com/sijanthapa171/instadown.git
 cd instadown
 ```
 
@@ -101,7 +101,7 @@ This project uses:
 
 ```bash
 # Clone the repository
-git clone https://github.com/authxt/instadown.git
+git clone https://github.com/sijanthapa171/instadown.git
 cd instadown
 
 # Development build
